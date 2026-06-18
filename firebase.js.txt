@@ -1,0 +1,15 @@
+import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyB7FXHWoeXUMA6K1ocffG_n5uc8U481DKU",
+  authDomain: "byd-clientconnect.firebaseapp.com",
+  projectId: "byd-clientconnect",
+  storageBucket: "byd-clientconnect.firebasestorage.app",
+  messagingSenderId: "585632427994",
+  appId: "1:585632427994:web:3d68ed0e83386a4ad81ae3",
+  measurementId: "G-0SHBHWY2D1"
+};
+
+const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);

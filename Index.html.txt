@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post-Delivery Follow-Up Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1e40af',
+                        secondary: '#3b82f6',
+                        accent: '#f59e0b',
+                        success: '#10b981',
+                        warning: '#f97316',
+                        danger: '#ef4444',
+                        dark: '#1e293b'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .timeline-dot {
+            transition: all 0.3s ease;
+        }
+        .timeline-dot:hover {
+            transform: scale(1.2);
+        }
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .pulse-ring {
+            animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); opacity: 0.8; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+        .slide-in {
+            animation: slideIn 0.4s ease-out forwards;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .checkbox-wrapper input:checked + div {
+            background-color: #10b981;
+            border-color: #10b981;
+        }
+        .checkbox-wrapper input:checked + div svg {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 min-h-screen text-slate-800">
+
+    <!-- Header -->
+    <header class="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/30">
+                        <i class="fas fa-car text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-dark tracking-tight">Follow-Up Pro</h1>
+                        <p class="text-xs text-slate-500 font-medium">Post-Delivery Customer Care</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button onclick="openModal()" class="bg-primary hover:bg-blue-800 text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-lg shadow-primary/25 flex items-center gap-2 active:scale-95">
+                        <i class="fas fa-plus"></i>
+                        <span class="hidden sm:inline">Add Sale</span>
+                    </button>
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold shadow-md cursor-pointer hover:shadow-lg transition-shadow">
+                        JD
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 card-hover">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-calendar-check text-primary text-xl"></i>
+                    </div>
+                    <span class="text-xs font-semibold text-slate-400 bg-slate-50 px-2 py-1 rounded-full">Total</span>
+                </div>
+                <h3 class="text-3xl font-bold text-dark" id="totalSales">0</h3>
+                <p class="text-sm text-slate-500 mt-1">Active Follow-Ups</p>
+            </div>
+            
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 card-hover">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-clock text-accent text-xl"></i>
+                    </div>
+                    <span class="text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-1 rounded-full">Due Today</span>
+                </div>
+                <h3 class="text-3xl font-bold text-dark" id="dueToday">0</h3>
+                <p class="text-sm text-slate-500 mt-1">Follow-Ups Required</p>
+            </div>
+            
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 card-hover">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-check-double text-success text-xl"></i>
+                    </div>
+                    <span class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">Completed</span>
+                </div>
+                <h3 class="text-3xl font-bold text-dark" id="completedCount">0</h3>
+                <p class="text-sm text-slate-500 mt-1">This Month</p>
+            </div>
+            
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 card-hover">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-percentage text-purple-600 text-xl"></i>
+                    </div>
+                    <span class="text-xs font-semibold text-purple-600 bg-purple-50 px-2 py-1 rounded-full">Rate</span>
+                </div>
+                <h3 class="text-3xl font-bold text-dark" id="completionRate">0%</h3>
+                <p class="text-sm text-slate-500 mt-1">Completion Rate</p>
+            </div>
+        </div>
+
+        <!-- Filters & Search -->
+        <div class="bg-white rounded-2xl p-4 mb-6 shadow-sm border border-slate-100 flex flex-col sm:flex-row gap-4 items-center justify-between">
+            <div class="relative flex-1 w-full sm:w-auto">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" id="searchInput" placeholder="Search customers, vehicles, or salespeople..." 
+                    class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                    oninput="filterSales()">
+            </div>
+            <div class="flex gap-2 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0">
+                <button onclick="setFilter('all')" id="filter-all" class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-primary text-white transition-all whitespace-nowrap">All</button>
+                <button onclick="setFilter('urgent')" id="filter-urgent" class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all whitespace-nowrap">Urgent</button>
+                <button onclick="setFilter('pending')" id="filter-pending" class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all whitespace-nowrap">Pending</button>
+                <button onclick="setFilter('completed')" id="filter-completed" class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all whitespace-nowrap">Completed</button>
+            </div>
+        </div>
+
+        <!-- Sales Grid -->
+        <div id="salesGrid" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            <!-- Cards will be injected here -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden text-center py-20">
+            <div class="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-car text-slate-300 text-4xl"></i>
+            </div>
+            <h3 class="text-xl font-semibold text-slate-700 mb-2">No sales recorded yet</h3>
+            <p class="text-slate-500 mb-6">Start by adding your first vehicle delivery to track follow-ups.</p>
+            <button onclick="openModal()" class="bg-primary text-white px-6 py-3 rounded-xl font-medium hover:bg-blue-800 transition-all">
+                Add Your First Sale
+            </button>
+        </div>
+    </main>
+
+    <!-- Add Sale Modal -->
+    <div id="addModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all scale-95 opacity-0" id="modalContent">
+            <div class="bg-gradient-to-r from-primary to-secondary p-6 text-white">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-bold">Record New Sale</h2>
+                    <button onclick="closeModal()" class="text-white/80 hover:text-white transition-colors">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <p class="text-blue-100 text-sm mt-1">Enter delivery details to set up automatic follow-up reminders.</p>
+            </div>
+            
+            <form id="saleForm" onsubmit="addSale(event)" class="p-6 space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Customer First Name</label>
+                        <input type="text" name="firstName" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" placeholder="John">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Customer Last Name</label>
+                        <input type="text" name="lastName" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" placeholder="Doe">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Phone Number</label>
+                    <input type="tel" name="phone" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" placeholder="(555) 123-4567">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                    <input type="email" name="email" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" placeholder="john@example.com">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Vehicle</label>
+                    <input type="text" name="vehicle" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" placeholder="2024 Toyota Camry SE">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Delivery Date</label>
+                    <input type="date" name="deliveryDate" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Salesperson</label>
+                    <input type="text" name="salesperson" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" placeholder="Your Name">
+                </div>
+                
+                <div class="pt-4 flex gap-3">
+                    <button type="button" onclick="closeModal()" class="flex-1 px-4 py-3 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 transition-all">Cancel</button>
+                    <button type="submit" class="flex-1 px-4 py-3 rounded-xl bg-primary text-white font-medium hover:bg-blue-800 transition-all shadow-lg shadow-primary/25">Create Follow-Up Plan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Follow-Up Detail Modal -->
+    <div id="detailModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all scale-95 opacity-0" id="detailModalContent">
+            <div id="detailHeader" class="p-6 text-white bg-gradient-to-r from-primary to-secondary">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h2 class="text-2xl font-bold" id="detailCustomerName">Customer Name</h2>
+                        <p class="text-blue-100 mt-1" id="detailVehicle">Vehicle Info</p>
+                    </div>
+                    <button onclick="closeDetailModal()" class="text-white/80 hover:text-white transition-colors">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="p-6">
+                <!-- Timeline -->
+                <div class="relative">
+                    <div class="absolute left-6 top-0 bottom-0 w-0.2 rounded-lg text-sm font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all whitespace-nowrap">Completed</button>
+            </div>
+        </div>
+
+        <!-- Sales Grid -->
+        <div id="salesGrid" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            <!-- Cards will be injected here -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden text-center py-20">
+            <div class="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-car text-slate-300 text-4xl"></i>
+            </div>
+            <h3 class="text-xl font-semibold text-slate-700 mb-2">No sales recorded yet</h3>
+            <p class="text-slate-500 mb-6">Start by adding your first vehicle delivery to track follow-ups.</p>
+            <button onclick="openModal()" class="bg-primary text-white px-6 py-3 rounded-xl font-medium hover:bg-blue-800 transition-all">
+                Add Your First Sale
+            </button>
+        </div>
+    </main>
+
+    <!-- Add Sale Modal -->
+    <div id="addModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all scale-95 opacity-0" id="modalContent">
+            <div class="bg-gradient-to-r from-primary to-secondary p-6 text-white">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-bold">Record New Sale</h2>
+                    <button onclick="closeModal()" class="text-white/80 hover:text-white transition-colors">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <p class="text-blue-100 text-sm mt-1">Enter delivery details to set up automatic follow-up reminders.</p>
+            </div>
+            
+            <form id="saleForm" onsubmit="addSale(event)" class="p-6 space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Customer First Name</label>
+                        <input type="text" name="firstName" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" placeholder="John">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Customer Last Name</label>
+                        <input type="text" name="lastName" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" placeholder="Doe">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Phone Number</label>
+                    <input type="tel" name="phone" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" placeholder="(555) 123-4567">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                    <input type="email" name="email" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" placeholder="john@example.com">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Vehicle</label>
+                    <input type="text" name="vehicle" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" placeholder="2024 Toyota Camry SE">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Delivery Date</label>
+                    <input type="date" name="deliveryDate" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Salesperson</label>
+                    <input type="text" name="salesperson" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" placeholder="Your Name">
+                </div>
+                
+                <div class="pt-4 flex gap-3">
+                    <button type="button" onclick="closeModal()" class="flex-1 px-4 py-3 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 transition-all">Cancel</button>
+                    <button type="submit" class="flex-1 px-4 py-3 rounded-xl bg-primary text-white font-medium hover:bg-blue-800 transition-all shadow-lg shadow-primary/25">Create Follow-Up Plan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Follow-Up Detail Modal -->
+    <div id="detailModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all scale-95 opacity-0" id="detailModalContent">
+            <div id="detailHeader" class="p-6 text-white bg-gradient-to-r from-primary to-secondary">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h2 class="text-2xl font-bold" id="detailCustomerName">Customer Name</h2>
+                        <p class="text-blue-100 mt-1" id="detailVehicle">Vehicle Info</p>
+                    </div>
+                    <button onclick="closeDetailModal()" class="text-white/80 hover:text-white transition-colors">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="p-6">
+                <!-- Timeline -->
+                <div class="relative">
+                    <div class="absolute left-6 top-0 bottom-0 w-0.5 bg-slate-200"></div>
+                    
+                    <!-- 3 Day Follow-Up -->
+                    <div class="relative flex items-start gap-4 mb-8">
+                        <div class="relative z-10">
+                            <div id="dot-3" class="w-12 h-12 rounded-full border-4 border-white shadow-md flex items-center justify-center text-white font-bold text-sm timeline-dot">
+                                3D
+                            </div>
+                        </div>
+                        <div class="flex-1 bg-slate-50 rounded-xl p-4 border border-slate-100">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <h4 class="font-bold text-slate-800">3-Day Check-In</h4>
+                                    <p class="text-sm text-slate-500" id="date-3">Date</p>
+                                </div>
+                                <span id="status-3" class="px-3 py-1 rounded-full text-xs font-bold">Status</span>
+                            </div>
+                            <p class="text-sm text-slate-600 mb-3">Call to ensure customer is enjoying their new vehicle. Address any immediate concerns.</p>
+                            <div class="flex gap-2">
+                                <button onclick="toggleComplete('3')" id="btn-3" class="text-sm px-4 py-2 rounded-lg font-medium transition-all">
+                                    Mark Complete
+                                </button>
+                                <button onclick="logCall('3')" class="text-sm px-4 py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 transition-all">
+                                    <i class="fas fa-phone mr-1"></i> Log Call
+                                </button>
+                            </div>
+                            <div id="notes-3" class="mt-3 text-sm text-slate-500 italic hidden"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 7 Day Follow-Up -->
+                    <div class="relative flex items-start gap-4 mb-8">
+                        <div class="relative z-10">
+                            <div id="dot-7" class="w-12 h-12 rounded-full border-4 border-white shadow-md flex items-center justify-center text-white font-bold text-sm timeline-dot">
+                                7D
+                            </div>
+                        </div>
+                        <div class="flex-1 bg-slate-50 rounded-xl p-4 border border-slate-100">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <h4 class="font-bold text-slate-800">7-Day Follow-Up</h4>
+                                    <p class="text-sm text-slate-500" id="date-7">Date</p>
+                                </div>
+                                <span id="status-7" class="px-3 py-1 rounded-full text-xs font-bold">Status</span>
+                            </div>
+                            <p class="text-sm text-slate-600 mb-3">Verify all features are working properly. Confirm satisfaction with purchase experience.</p>
+                            <div class="flex gap-2">
+                                <button onclick="toggleComplete('7')" id="btn-7" class="text-sm px-4 py-2 rounded-lg font-medium transition-all">
+                                    Mark Complete
+                                </button>
+                                <button onclick="logCall('7')" class="text-sm px-4 py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 transition-all">
+                                    <i class="fas fa-phone mr-1"></i> Log Call
+                                </button>
+                            </div>
+                            <div id="notes-7" class="mt-3 text-sm text-slate-500 italic hidden"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 28 Day Follow-Up -->
+                    <div class="relative flex items-start gap-4">
+                        <div class="relative z-10">
+                            <div id="dot-28" class="w-12 h-12 rounded-full border-4 border-white shadow-md flex items-center justify-center text-white font-bold text-sm timeline-dot">
+                                28D
+                            </div>
+                        </div>
+                        <div class="flex-1 bg-slate-50 rounded-xl p-4 border border-slate-100">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <h4 class="font-bold text-slate-800">28-Day Pre-Survey</h4>
+                                    <p class="text-sm text-slate-500" id="date-28">Date</p>
+                                </div>
+                                <span id="status-28" class="px-3 py-1 rounded-full text-xs font-bold">Status</span>
+                            </div>
+                            <p class="text-sm text-slate-600 mb-3">Pre-survey satisfaction check. Resolve any issues before manufacturer survey arrives.</p>
+                            <div class="flex gap-2">
+                                <button onclick="toggleComplete('28')" id="btn-28" class="text-sm px-4 py-2 rounded-lg font-medium transition-all">
+                                    Mark Complete
+                                </button>
+                                <button onclick="logCall('28')" class="text-sm px-4 py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 transition-all">
+                                    <i class="fas fa-phone mr-1"></i> Log Call
+                                </button>
+                            </div>
+                            <div id="notes-28" class="mt-3 text-sm text-slate-500 italic hidden"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-6 pt-6 border-t border-slate-100 flex justify-between items-center">
+                    <div class="text-sm text-slate-500">
+                        <i class="fas fa-user mr-1"></i> Sold by <span id="detailSalesperson" class="font-medium text-slate-700">Salesperson</span>
+                    </div>
+                    <button onclick="deleteSale()" class="text-red-500 hover:text-red-700 text-sm font-medium transition-colors">
+                        <i class="fas fa-trash-alt mr-1"></i> Remove Record
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-dark text-white px-6 py-3 rounded-xl shadow-2xl transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-3">
+        <i class="fas fa-check-circle text-success"></i>
+        <span id="toastMessage">Action completed</span>
+    </div>
+
+    <script>
+        // Data Management
+        let sales = JSON.parse(localStorage.getItem('followUpSales')) || [];
+        let currentFilter = 'all';
+        let currentDetailId = null;
+        let currentDetailSale = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set default delivery date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.querySelector('input[name="deliveryDate"]').value = today;
+            
+            renderSales();
+            updateStats();
+        });
+
+        // Modal Functions
+        function openModal() {
+            const modal = document.getElementById('addModal');
+            const content = document.getElementById('modalContent');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('addModal');
+            const content = document.getElementById('modalContent');
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.getElementById('saleForm').reset();
+                const today = new Date().toISOString().split('T')[0];
+                document.querySelector('input[name="deliveryDate"]').value = today;
+            }, 300);
+        }
+
+        function openDetailModal(sale) {
+            currentDetailSale = sale;
+            currentDetailId = sale.id;
+            
+            document.getElementById('detailCustomerName').textContent = `${sale.firstName} ${sale.lastName}`;
+            document.getElementById('detailVehicle').textContent = sale.vehicle;
+            document.getElementById('detailSalesperson').textContent = sale.salesperson;
+            
+            const deliveryDate = new Date(sale.deliveryDate);
+            
+            // Update timeline items
+            [3, 7, 28].forEach(day => {
+                const followUpDate = new Date(deliveryDate);
+                followUpDate.setDate(followUpDate.getDate() + day);
+                
+                document.getElementById(`date-${day}`).textContent = followUpDate.toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                });
+                
+                const isComplete = sale.followUps[day].completed;
+                const dot = document.getElementById(`dot-${day}`);
+                const status = document.getElementById(`status-${day}`);
+                const btn = document.getElementById(`btn-${day}`);
+                const notes = document.getElementById(`notes-${day}`);
+                
+                if (isComplete) {
+                    dot.className = 'w-12 h-12 rounded-full border-4 border-white shadow-md flex items-center justify-center bg-success text-white font-bold text-sm timeline-dot';
+                    status.className = 'px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700';
+                    status.textContent = 'Completed';
+                    btn.className = 'text-sm px-4 py-2 rounded-lg font-medium bg-slate-100 text-slate-500 transition-all cursor-default';
+                    btn.textContent = 'Completed';
+                    btn.disabled = true;
+                } else {
+                    const isOverdue = followUpDate < new Date() && !isComplete;
+                    const isToday = followUpDate.toDateString() === new Date().toDateString();
+                    
+                    if (isOverdue) {
+                        dot.className = 'w-12 h-12 rounded-full border-4 border-white shadow-md flex items-center justify-center bg-danger text-white font-bold text-sm timeline-dot relative';
+                        // Add pulse ring for overdue
+                        const pulse = document.createElement('div');
+                        pulse.className = 'absolute inset-0 rounded-full bg-danger pulse-ring';
+                        dot.appendChild(pulse);
+                        status.className = 'px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700';
+                        status.textContent = 'Overdue';
+                    } else if (isToday) {
+                        dot.className = 'w-12 h-12 rounded-full border-4 border-white shadow-md flex items-center justify-center bg-accent text-white font-bold text-sm timeline-dot';
+                        status.className = 'px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700';
+                        status.textContent = 'Due Today';
+                    } else {
+                        dot.className = 'w-12 h-12 rounded-full border-4 border-white shadow-md flex items-center justify-center bg-slate-300 text-white font-bold text-sm timeline-dot';
+                        status.className = 'px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-500';
+                        status.textContent = 'Upcoming';
+                    }
+                    
+                    btn.className = 'text-sm px-4 py-2 rounded-lg font-medium bg-primary text-white hover:bg-blue-800 transition-all shadow-md shadow-primary/20';
+                    btn.textContent = 'Mark Complete';
+                    btn.disabled = false;
+                }
+                
+                // Show notes if exist
+                if (sale.followUps[day].notes) {
+                    notes.textContent = `Note: ${sale.followUps[day].notes}`;
+                    notes.classList.remove('hidden');
+                } else {
+                    notes.classList.add('hidden');
+                }
+            });
+            
+            const modal = document.getElementById('detailModal');
+            const content = document.getElementById('detailModalContent');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeDetailModal() {
+            const modal = document.getElementById('detailModal');
+            const content = document.getElementById('detailModalContent');
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                currentDetailId = null;
+                currentDetailSale = null;
+            }, 300);
+        }
+
+        // Core Functions
+        function addSale(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            
+            const deliveryDate = new Date(formData.get('deliveryDate'));
+            
+            const sale = {
+                id: Date.now().toString(),
+                firstName: formData.get('firstName'),
+                lastName: formData.get('lastName'),
+                phone: formData.get('phone'),
+                email: formData.get('email') || '',
+                vehicle: formData.get('vehicle'),
+                deliveryDate: formData.get('deliveryDate'),
+                salesperson: formData.get('salesperson'),
+                createdAt: new Date().toISOString(),
+                followUps: {
+                    3: { completed: false, completedAt: null, notes: '' },
+                    7: { completed: false, completedAt: null, notes: '' },
+                    28: { completed: false, completedAt: null, notes: '' }
+                }
+            };
+            
+            sales.push(sale);
+            saveSales();
+            renderSales();
+            updateStats();
+            closeModal();
+            showToast('Sale recorded successfully! Follow-ups scheduled.');
+        }
+
+        function toggleComplete(day) {
+            if (!currentDetailId) return;
+            
+            const sale = sales.find(s => s.id === currentDetailId);
+            if (!sale) return;
+            
+            sale.followUps[day].completed = !sale.followUps[day].completed;
+            sale.followUps[day].completedAt = sale.followUps[day].completed ? new Date().toISOString() : null;
+            
+            saveSales();
+            openDetailModal(sale); // Refresh modal
+            renderSales();
+            updateStats();
+            
+            const action = sale.followUps[day].completed ? 'completed' : 'reopened';
+            showToast(`${day}-day follow-up ${action}`);
+        }
+
+        function logCall(day) {
+            const note = prompt('Enter call notes (optional):');
+            if (note === null) return; // Cancelled
+            
+            const sale = sales.find(s => s.id === currentDetailId);
+            if (!sale) return;
+            
+            sale.followUps[day].notes = note || 'Call logged';
+            saveSales();
+            openDetailModal(sale);
+            showToast('Call logged successfully');
+        }
+
+        function deleteSale() {
+            if (!confirm('Are you sure you want to delete this record?')) return;
+            
+            sales = sales.filter(s => s.id !== currentDetailId);
+            saveSales();
+            renderSales();
+            updateStats();
+            closeDetailModal();
+            showToast('Record deleted');
+        }
+
+        function saveSales() {
+            localStorage.setItem('followUpSales', JSON.stringify(sales));
+        }
+
+        // Rendering
+        function renderSales() {
+            const grid = document.getElementById('salesGrid');
+            const emptyState = document.getElementById('emptyState');
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            let filteredSales = sales.filter(sale => {
+                const searchMatch = 
+                    sale.firstName.toLowerCase().includes(searchTerm) ||
+                    sale.lastName.toLowerCase().includes(searchTerm) ||
+                    sale.vehicle.toLowerCase().includes(searchTerm) ||
+                    sale.salesperson.toLowerCase().includes(searchTerm);
+                
+                if (!searchMatch) return false;
+                
+                if (currentFilter === 'all') return true;
+                
+                const deliveryDate = new Date(sale.deliveryDate);
+                const now = new Date();
+                
+                const day3 = new Date(deliveryDate); day3.setDate(day3.getDate() + 3);
+                const day7 = new Date(deliveryDate); day7.setDate(day7.getDate() + 7);
+                const day28 = new Date(deliveryDate); day28.setDate(day28.getDate() + 28);
+                
+                const hasOverdue = (!sale.followUps[3].completed && day3 < now) ||
+                                  (!sale.followUps[7].completed && day7 < now) ||
+                                  (!sale.followUps[28].completed && day28 < now);
+                
+                const hasPendingToday = (day3.toDateString() === now.toDateString() && !sale.followUps[3].completed) ||
+                                       (day7.toDateString() === now.toDateString() && !sale.followUps[7].completed) ||
+                                       (day28.toDateString() === now.toDateString() && !sale.followUps[28].completed);
+                
+                const allComplete = sale.followUps[3].completed && sale.followUps[7].completed && sale.followUps[28].completed;
+                
+                if (currentFilter === 'urgent') return hasOverdue || hasPendingToday;
+                if (currentFilter === 'pending') return !allComplete;
+                if (currentFilter === 'completed') return allComplete;
+                
+                return true;
+            });
+            
+            // Sort by urgency
+            filteredSales.sort((a, b) => {
+                const aUrgent = isUrgent(a);
+                const bUrgent = isUrgent(b);
+                if (aUrgent && !bUrgent) return -1;
+                if (!aUrgent && bUrgent) return 1;
+                return new Date(b.deliveryDate) - new Date(a.deliveryDate);
+            });
+            
+            if (filteredSales.length === 0) {
+                grid.innerHTML = '';
+                if (sales.length === 0) {
+                    emptyState.classList.remove('hidden');
+                } else {
+                    emptyState.classList.add('hidden');
+                    grid.innerHTML = `
+                        <div class="col-span-full text-center py-12 text-slate-400">
+                            <i class="fas fa-filter text-4xl mb-3"></i>
+                            <p>No sales match your current filter.</p>
+                        </div>
+                    `;
+                }
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            
+            grid.innerHTML = filteredSales.map((sale, index) => {
+                const deliveryDate = new Date(sale.deliveryDate);
+                const now = new Date();
+                
+                const day3 = new Date(deliveryDate); day3.setDate(day3.getDate() + 3);
+                const day7 = new Date(deliveryDate); day7.setDate(day7.getDate() + 7);
+                const day28 = new Date(deliveryDate); day28.setDate(day28.getDate() + 28);
+                
+                const daysSinceDelivery = Math.floor((now - deliveryDate) / (1000 * 60 * 60 * 24));
+                
+                // Determine current status
+                let statusColor = 'bg-slate-100 text-slate-600';
+                let statusText = 'On Track';
+                let statusIcon = 'fa-check';
+                let urgent = false;
+                
+                const checkOverdue = (date, completed) => !completed && date < now && date.toDateString() !== now.toDateString();
+                const checkToday = (date, completed) => date.toDateString() === now.toDateString() && !completed;
+                
+                if (checkOverdue(day3, sale.followUps[3].completed) || 
+                    checkOverdue(day7, sale.followUps[7].completed) || 
+                    checkOverdue(day28, sale.followUps[28].completed)) {
+                    statusColor = 'bg-red-100 text-red-700';
+                    statusText = 'Overdue';
+                    statusIcon = 'fa-exclamation-circle';
+                    urgent = true;
+                } else if (checkToday(day3, sale.followUps[3].completed) || 
+                          checkToday(day7, sale.followUps[7].completed) || 
+                          checkToday(day28, sale.followUps[28].completed)) {
+                    statusColor = 'bg-amber-100 text-amber-700';
+                    statusText = 'Due Today';
+                    statusIcon = 'fa-clock';
+                    urgent = true;
+                } else if (sale.followUps[3].completed && sale.followUps[7].completed && sale.followUps[28].completed) {
+                    statusColor = 'bg-emerald-100 text-emerald-700';
+                    statusText = 'All Complete';
+                    statusIcon = 'fa-check-double';
+                }
+                
+                // Progress calculation
+                const completedCount = [3, 7
